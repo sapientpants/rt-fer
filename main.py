@@ -39,23 +39,25 @@ detector = FER(mtcnn=True)
 cap = cv2.VideoCapture(0)
 
 # Set a frame rate for recording the video (adjust based on your webcam's capabilities)
-frame_rate = 1.0
+FRAMES_PER_SECOND = 4.0
 
 # Initialize OpenCV's VideoWriter to save the video with the specified frame rate
-fourcc = cv2.VideoWriter_fourcc(*"XVID")
-out = cv2.VideoWriter("emotion_video.avi", fourcc, frame_rate, (640, 480))
+FOURCC = cv2.VideoWriter_fourcc(*"XVID")
+out = None
 
 # Set up a matplotlib figure for displaying live emotion detection results
 plt.ion()  # Turn on interactive mode for live updates
 fig, ax = plt.subplots()
-emotion_labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
+
+EMOTION_LABELS = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
+
 bars = ax.bar(
-    emotion_labels, [0] * 7, color="lightblue"
+    EMOTION_LABELS, [0] * 7, color="lightblue"
 )  # Initialize bars for each emotion
 plt.ylim(0, 1)
 plt.ylabel("Confidence")
 plt.title("Real-time Emotion Detection")
-ax.set_xticklabels(emotion_labels, rotation=45)
+ax.set_xticklabels(EMOTION_LABELS, rotation=45)
 
 # Initialize imageio writer to save live chart updates as a GIF
 gif_writer = imageio.get_writer("emotion_chart.gif", mode="I", duration=0.1)
@@ -67,17 +69,20 @@ emotion_statistics = []
 # Function to update the live chart
 def update_chart(detected_emotions, bars, ax, fig):
     # Clear the current axes and set up the bar chart again
-    ax.clear()
-    ax.bar(
-        emotion_labels,
-        [detected_emotions.get(emotion, 0) for emotion in emotion_labels],
-        color="lightblue",
-    )
-    plt.ylim(0, 1)
-    plt.ylabel("Confidence")
-    plt.title("Real-time Emotion Detection")
-    ax.set_xticklabels(emotion_labels, rotation=45)
-    fig.canvas.draw()
+    # ax.clear()
+    # ax.bar(
+    #     emotion_labels,
+    #     [detected_emotions.get(emotion, 0) for emotion in emotion_labels],
+    #     color="lightblue",
+    # )
+    # plt.ylim(0, 1)
+    # plt.ylabel("Confidence")
+    # plt.title("Real-time Emotion Detection")
+    # ax.set_xticklabels(emotion_labels, rotation=45)
+    for bar, emotion in zip(bars, EMOTION_LABELS):
+        bar.set_height(detected_emotions.get(emotion, 0))
+    # plt.draw()
+    # fig.canvas.draw()
     fig.canvas.flush_events()
 
 
@@ -89,6 +94,14 @@ try:
         ret, frame = cap.read()  # Read a frame from the webcam
         if not ret:
             break  # Break the loop if no frame is captured
+
+        if not out:
+            out = cv2.VideoWriter(
+                "emotion_video.mp4",
+                FOURCC,
+                FRAMES_PER_SECOND,
+                (frame.shape[1], frame.shape[0]),
+            )
 
         # Detect emotions on the frame
         result = detector.detect_emotions(frame)
@@ -129,7 +142,7 @@ try:
                 2,
             )
 
-            # update_chart(current_emotions, bars, ax, fig)
+            update_chart(current_emotions, bars, ax, fig)
 
             out.write(frame)  # Write the frame to the video file
 
@@ -155,13 +168,14 @@ finally:
     cv2.destroyAllWindows()
     plt.close(fig)
 
-    out.release()
+    if out:
+        out.release()
     gif_writer.close()
 
     emotion_df = pd.DataFrame(emotion_statistics)
 
     plt.figure(figsize=(10, 10))
-    for emotion in emotion_labels:
+    for emotion in EMOTION_LABELS:
         plt.plot(emotion_df[emotion].cumsum(), label=emotion)
     plt.title("Cumulative Emotion Statistics Over Time")
     plt.xlabel("Frame")
