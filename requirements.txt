@@ -1,0 +1,5 @@
+fer
+imageio
+matplotlib
+opencv-python
+tensorflow
