@@ -30,7 +30,7 @@ Key Features:
 
 
 # Set the backend for matplotlib to 'TkAgg' for compatibility with different environments
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 
 # Initialize the FER (Face Emotion Recognition) detector using MTCNN
 detector = FER(mtcnn=True)
@@ -129,15 +129,15 @@ try:
                 2,
             )
 
-            update_chart(current_emotions, bars, ax, fig)
+            # update_chart(current_emotions, bars, ax, fig)
 
             out.write(frame)  # Write the frame to the video file
 
             # Save the current state of the bar chart as a frame in the GIF
-            fig.canvas.draw()
-            image = np.frombuffer(fig.canvas.tostring_rgb(), dtype="uint8")
-            image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            gif_writer.append_data(image)
+            # fig.canvas.draw()
+            # image = np.frombuffer(fig.canvas.tostring_rgb(), dtype="uint8")
+            # image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+            # gif_writer.append_data(image)
 
         cv2.imshow("Emotion Detection", frame)  # Display the frame
 
